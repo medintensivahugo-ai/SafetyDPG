@@ -264,16 +264,16 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div class="card">
         <div class="card-ttl">Marque os tipos ocorridos</div>
         <div class="chip-grp" id="evChips">
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Extubação acidental">⚡ Extubação acidental</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Reintubação não planejada">🔄 Reintubação não planejada</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Saída acidental de cateter">💉 Cateter acidental</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Queda">🫸 Queda</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="PCR intra-hospitalar">❤️ PCR intra-hospitalar</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Erro de medicação">💊 Erro de medicação</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Falha de equipamento">🖥️ Falha de equipamento</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="ICS-CVC">🩸 ICS-CVC</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="IRAS">🦠 IRAS</label>
-          <label class="chip" onclick="tChip(this)"><input type="checkbox" value="Outro">➕ Outro</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Extubação acidental">⚡ Extubação acidental</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Reintubação não planejada">🔄 Reintubação não planejada</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Saída acidental de cateter">💉 Cateter acidental</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Queda">🫸 Queda</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="PCR intra-hospitalar">❤️ PCR intra-hospitalar</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Erro de medicação">💊 Erro de medicação</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Falha de equipamento">🖥️ Falha de equipamento</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="ICS-CVC">🩸 ICS-CVC</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="IRAS">🦠 IRAS</label>
+          <label class="chip" onclick="tChip(this);return false;"><input type="checkbox" value="Outro">➕ Outro</label>
         </div>
       </div>
       <div class="card">
@@ -552,7 +552,7 @@ function buildAltas(){
         <div class="ff"><label>Prováveis 24h</label><input type="number" id="${u.id}_a24" min="0" placeholder="0"></div>
         <div class="ff"><label>Óbitos esperados</label><input type="number" id="${u.id}_ob" min="0" placeholder="0"></div>
       </div>
-      <div class="ff"><label>Tipo (T2 / T3…)</label><input type="text" id="${u.id}_tp" placeholder="ex: T2, T3…"></div>
+
     </div></div>`;});
 }
 
@@ -579,7 +579,7 @@ function addEv(){
   d.innerHTML=`<input type="text" placeholder="UTI / leito / descrição"><button class="btn-rm" onclick="this.parentElement.remove()">✕</button>`;
   l.appendChild(d);
 }
-function tChip(el){el.classList.toggle('on');}
+function tChip(el){el.classList.toggle('on');var inp=el.querySelector('input');if(inp)inp.checked=!inp.checked;}
 
 /* GERENCIADOS */
 function addGerido(data={}){
