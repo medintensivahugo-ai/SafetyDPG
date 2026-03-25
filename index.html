@@ -116,7 +116,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-grn{background:var(–grn);color:#0b0e14;}
 .btn-org{background:var(–org);color:#0b0e14;}
 
-#report-view,#share-view,#history-view,#monthly-view{display:none;}
+#form-view,#report-view,#share-view,#history-view,#monthly-view{display:none;}
 
 .rpt-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .rpt-actions .btn{font-size:14px;padding:13px 10px;}
@@ -465,6 +465,7 @@ const EQUIPES=[
 const N=9; let cur=1, meAtivo=false;
 
 document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('form-view').style.display='block';
   setHdrDate(); buildProg(); buildCenso(); buildAltas(); buildCriticos(); buildEquipes();
   loadGeridos(); addEv(); populateMonthSel();
 });
