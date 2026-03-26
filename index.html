@@ -187,11 +187,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <div class="sec vis" id="sec-1">
     <div class="sec-hdr"><div class="sec-ico" style="background:rgba(79,158,255,.1)">&#127973;</div><div><div class="sec-step">1 / 9</div><div class="sec-title">Demandas de Vaga</div></div></div>
     <div class="card"><div class="card-ttl">Pronto-socorro (PS)</div>
-      <div class="r2"><div class="ff"><label>Aguardando vaga UTI</label><input type="number" id="ps_tot" min="0" placeholder="0"></div><div class="ff"><label>Desses, em VM</label><input type="number" id="ps_vm" min="0" placeholder="0"></div></div>
-      <div class="ff"><label>Observa&#231;&#245;es</label><input type="text" id="ps_obs" placeholder="ex: 2 sepses, 1 TCE"></div></div>
-    <div class="card"><div class="card-ttl">Recupera&#231;&#227;o Anest&#233;sica (SRPA)</div>
-      <div class="r2"><div class="ff"><label>Aguardando vaga UTI</label><input type="number" id="srpa_tot" min="0" placeholder="0"></div><div class="ff"><label>Desses, em VM</label><input type="number" id="srpa_vm" min="0" placeholder="0"></div></div>
-      <div class="ff"><label>Observa&#231;&#245;es</label><input type="text" id="srpa_obs" placeholder="ex: p&#243;s-op card&#237;aco"></div></div>
+      <div class="r2"><div class="ff"><label>Aguardando vaga UTI</label><input type="number" id="ps_tot" min="0" placeholder="0"></div><div class="ff"><label>Desses, em VM</label><input type="number" id="ps_vm" min="0" placeholder="0"></div></div></div>
+    <div class="card"><div class="card-ttl">Recupera&#231;&#227;o Anest&#233;sica (RPA)</div>
+      <div class="r2"><div class="ff"><label>Aguardando vaga UTI</label><input type="number" id="srpa_tot" min="0" placeholder="0"></div><div class="ff"><label>Desses, em VM</label><input type="number" id="srpa_vm" min="0" placeholder="0"></div></div></div>
+    <div class="card"><div class="card-ttl">&#128295; Infraestrutura</div>
+      <div class="ff"><label>Problemas de infraestrutura</label><textarea id="infra_obs" placeholder="ex: pia quebrada leito 5, ar-condicionado UTI 2 com defeito, porta emperrou..." style="min-height:80px;"></textarea></div></div>
     <div class="nav-row"><span></span><button class="btn btn-pri" onclick="goSec(2)">Pr&#243;ximo &#8594;</button></div>
   </div>
   <div class="sec" id="sec-2">
@@ -622,15 +622,16 @@ function mkRec() {
   });
   const l=parseInt(gv("leitos_tot"))||54;
   const eq={}; EQ.forEach(e=>eq[e.id]=(gv(`${e.id}_sig`)||"").trim());
+  const infra=(gv("infra_obs")||"").trim();
   return {ts:now.toISOString(),
     date:now.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),
     time:now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
     ps:{tot:parseInt(gv("ps_tot"))||0,vm:parseInt(gv("ps_vm"))||0,obs:gv("ps_obs")},
-    srpa:{tot:parseInt(gv("srpa_tot"))||0,vm:parseInt(gv("srpa_vm"))||0,obs:gv("srpa_obs")},
+    srpa:{tot:parseInt(gv("srpa_tot"))||0,vm:parseInt(gv("srpa_vm"))||0,obs:gv("rpa_obs_unused")},
     leitos:l,tVM:vm,taxa:((vm/l)*100).toFixed(1),ud,
     ev:getChips(), evD:[...document.querySelectorAll("#evList input")].map(e=>e.value).filter(Boolean),
     ger:getGer(), me:{on:meAtivo,items:[...document.querySelectorAll("#meList input")].map(e=>e.value).filter(Boolean)},
-    eq};
+    eq, infra};
 }
 
 // ── STORAGE ──
@@ -706,7 +707,7 @@ function renderRpt(rec) {
   // Demandas
   sec("🏥 Demandas", s=>{
     const g=mkDiv(""); g.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px;";
-    [{lbl:"PS",d:rec.ps,c:"var(--acc2)"},{lbl:"SRPA",d:rec.srpa,c:"var(--teal)"}].forEach(({lbl,d,c})=>{
+    [{lbl:"PS",d:rec.ps,c:"var(--acc2)"},{lbl:"RPA",d:rec.srpa,c:"var(--teal)"}].forEach(({lbl,d,c})=>{
       const box=mkDiv(""); box.style.cssText="background:var(--surf2);border-radius:var(--r);padding:10px;";
       const l=mkDiv(""); l.style.cssText="font-size:11px;color:var(--tx3);margin-bottom:3px;"; l.textContent=lbl;
       const v=mkDiv(""); v.style.cssText=`font-family:'DM Mono',monospace;font-size:22px;color:${c};`; v.textContent=d.tot;
@@ -927,7 +928,7 @@ function copyWA() {
   t+=`🟢 Altas novas: *${n}* · 🟠 Retidas: *${r}*\n\n`;
   t+=`🏥 *DEMANDAS*\n`;
   t+=`• PS: ${rec.ps.tot} pcts (${rec.ps.vm} VM)${rec.ps.obs?" — "+rec.ps.obs:""}\n`;
-  t+=`• SRPA: ${rec.srpa.tot} pcts (${rec.srpa.vm} VM)${rec.srpa.obs?" — "+rec.srpa.obs:""}\n\n`;
+  t+=`• RPA: ${rec.srpa.tot} pcts (${rec.srpa.vm} VM)${rec.srpa.obs?" — "+rec.srpa.obs:""}\n\n`;
   t+=`📊 *CENSO*\n`;
   UTIS.forEach(u=>{const d=rec.ud[u.id];t+=`• ${u.name}: ${d.int} int | ${d.vm} VM | ${d.lat} leitos\n`;});
   t+=`\n🚪 *ALTAS*\n`;
@@ -993,7 +994,7 @@ function renderMonthly() {
     const rr=iC?(parseInt(r["Altas Retidas Total"])||0):UTIS.reduce((s,u)=>s+r.ud[u.id].ar,0);
     const taxa=parseFloat(iC?r["Taxa VM %"]:r.taxa)||0;
     tn+=rn;tr+=rr;tps+=iC?(parseInt(r["PS Aguardando"])||0):(r.ps?r.ps.tot:0);
-    tsrpa+=iC?(parseInt(r["SRPA Aguardando"])||0):(r.srpa?r.srpa.tot:0);
+    tsrpa+=iC?(parseInt(r["RPA Aguardando"])||0):(r.srpa?r.srpa.tot:0);
     txSum+=taxa; if(rr>0)retDia.push(rr);
     const d=new Date(r.ts); txDia.push({d:d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),t:taxa});
     novasDia.push(rn);
@@ -1036,9 +1037,9 @@ function renderMonthly() {
   addCard(ttl("🏥 PS + SRPA")+
     `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
       <div>${mono(tps,"var(--acc2)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">PS total</div></div>
-      <div>${mono(tsrpa,"var(--teal)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">SRPA total</div></div>
+      <div>${mono(tsrpa,"var(--teal)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">RPA total</div></div>
       <div>${mono((tps/dias).toFixed(1),"var(--acc2)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">PS/dia</div></div>
-      <div>${mono((tsrpa/dias).toFixed(1),"var(--teal)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">SRPA/dia</div></div>
+      <div>${mono((tsrpa/dias).toFixed(1),"var(--teal)",22)}<div style="font-size:11px;color:var(--tx3);margin-top:3px">RPA/dia</div></div>
     </div>`);
 
   // Eventos
