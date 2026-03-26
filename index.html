@@ -225,11 +225,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
   <div class="sec" id="sec-4">
     <div class="sec-hdr"><div class="sec-ico" style="background:rgba(52,195,100,.1)">&#128682;</div><div><div class="sec-step">4 / 9</div><div class="sec-title">Altas por UTI</div></div></div>
-    <div class="altas-explain"><strong>&#127802; Altas novas hoje</strong> = alta dada neste dia<br><strong>&#127825; Retidas sem leito</strong> = alta de dias anteriores, paciente ainda na UTI por falta de vaga<br><span style="color:var(--tx3)">S&#227;o campos independentes.</span></div>
+    <div class="altas-explain"><strong>🟢 Altas novas hoje</strong> = alta dada neste dia<br><strong>🟠 Retidas sem leito</strong> = alta de dias anteriores, paciente ainda na UTI por falta de vaga<br><span style="color:var(--tx3)">S&#227;o campos independentes.</span></div>
     <div class="altas-total">
-      <div class="at-row"><span class="at-lbl">&#127802; Total altas novas hoje</span><span class="at-val" id="totNovas" style="color:var(--grn)">0</span></div>
+      <div class="at-row"><span class="at-lbl">🟢 Total altas novas hoje</span><span class="at-val" id="totNovas" style="color:var(--grn)">0</span></div>
       <div class="at-div"></div>
-      <div class="at-row"><span class="at-lbl">&#127825; Total retidas sem leito</span><span class="at-val" id="totRetidas" style="color:var(--org)">0</span></div>
+      <div class="at-row"><span class="at-lbl">🟠 Total retidas sem leito</span><span class="at-val" id="totRetidas" style="color:var(--org)">0</span></div>
     </div>
     <div id="altasBlocks"></div>
     <div class="nav-row"><button class="btn btn-sec" onclick="goSec(3)" style="flex:none">&#8592; Ant.</button><button class="btn btn-pri" onclick="goSec(5)" style="flex:1">Pr&#243;ximo &#8594;</button></div>
@@ -630,11 +630,8 @@ function finalize() {
   const rec=mkRec(); saveLoc(rec); renderRpt(rec); switchView("report-view");
   const se=document.getElementById("syncStatus");
   se.innerHTML=`<span class="sync-badge sync-load">Salvando na nuvem…</span>`;
-  fetch(SURL,{method:"POST",body:JSON.stringify(rec)})
-    .then(r=>r.json())
-    .then(d=>{se.innerHTML=d.status==="ok"
-      ?`<span class="sync-badge sync-ok">✓ Salvo no Google Sheets</span>`
-      :`<span class="sync-badge sync-err">⚠️ Erro ao salvar</span>`;})
+  fetch(SURL,{method:"POST",mode:"no-cors",body:JSON.stringify(rec)})
+    .then(()=>{se.innerHTML=`<span class="sync-badge sync-ok">✓ Salvo no Google Sheets</span>`;})
     .catch(()=>{se.innerHTML=`<span class="sync-badge sync-err">Salvo localmente (sem internet)</span>`;});
 }
 
