@@ -365,18 +365,40 @@ function buildCriticos(){
   var c=document.getElementById("criticosBlocks");
   UTIS.forEach(function(u){
     var d=document.createElement("div");d.className="uti-blk";
-    d.innerHTML="<div class='uti-hdr'><div class='uti-dot' style='background:"+u.color+"'></div><div class='uti-nm'>"+u.name+"</div></div><div class='uti-bdy'><div id='"+u.id+"_cl'></div><button class='btn-add' onclick="addC('"+u.id+"')">+ Adicionar paciente / leito</button></div>";
-    c.appendChild(d);addC(u.id);
+    d.innerHTML="<div class='uti-hdr'><div class='uti-dot' style='background:"+u.color+"'></div><div class='uti-nm'>"+u.name+"</div></div><div class='uti-bdy'><div id='"+u.id+"_cl'></div><button class='btn-add' data-uid='"+u.id+"'>+ Adicionar paciente / leito</button></div>";
+    c.appendChild(d);
+    (function(uid){d.querySelector(".btn-add").addEventListener("click",function(){addC(uid);});})(u.id);
+    addC(u.id);
   });
 }
-function addC(uid){var l=document.getElementById(uid+"_cl");var d=document.createElement("div");d.className="dyn-item";d.innerHTML="<input type='text' placeholder='Leito / motivo de destaque'><button class='btn-rm' onclick='this.parentElement.remove()'>X</button>";l.appendChild(d);}
-function addEv(){var l=document.getElementById("evList");var d=document.createElement("div");d.className="dyn-item";d.innerHTML="<input type='text' placeholder='UTI / leito / descricao'><button class='btn-rm' onclick='this.parentElement.remove()'>X</button>";l.appendChild(d);}
+function addC(uid){
+  var l=document.getElementById(uid+"_cl");
+  var d=document.createElement("div");d.className="dyn-item";
+  var inp=document.createElement("input");inp.type="text";inp.placeholder="Leito / motivo de destaque";
+  var btn=document.createElement("button");btn.className="btn-rm";btn.textContent="X";btn.addEventListener("click",function(){d.remove();});
+  d.appendChild(inp);d.appendChild(btn);l.appendChild(d);
+}
+function addEv(){
+  var l=document.getElementById("evList");
+  var d=document.createElement("div");d.className="dyn-item";
+  var inp=document.createElement("input");inp.type="text";inp.placeholder="UTI / leito / descricao";
+  var btn=document.createElement("button");btn.className="btn-rm";btn.textContent="X";btn.addEventListener("click",function(){d.remove();});
+  d.appendChild(inp);d.appendChild(btn);l.appendChild(d);
+}
 function tChip(el){el.classList.toggle("on");}
 function getChips(){return[].slice.call(document.querySelectorAll("#evChips .chip.on")).map(function(e){return e.getAttribute("data-val");});}
 function addGerido(data){
   data=data||{};var l=document.getElementById("geridosList");var idx=l.querySelectorAll(".ger-item").length+1;
   var d=document.createElement("div");d.className="ger-item";
-  d.innerHTML="<div class='ger-head'><span class='ger-num'>Paciente "+idx+"</span><button class='btn-rm' onclick="this.closest('.ger-item').remove();renum()">X</button></div><div class='r2'><div class='ff'><label>UTI</label><input type='text' class='g-uti' placeholder='UTI 2' value='"+(data.uti||"")+"'></div><div class='ff'><label>Leito</label><input type='text' class='g-leito' placeholder='05' value='"+(data.leito||"")+"'></div></div><div class='r2'><div class='ff'><label>Iniciais</label><input type='text' class='g-ini' placeholder='JSS' value='"+(data.ini||"")+"'></div><div class='ff'><label>Motivo</label><input type='text' class='g-motivo' placeholder='Risco juridico' value='"+(data.motivo||"")+"'></div></div>";
+  var rmBtn=document.createElement("button");rmBtn.className="btn-rm";rmBtn.textContent="X";rmBtn.addEventListener("click",function(){d.remove();renum();});
+  var head=document.createElement("div");head.className="ger-head";
+  var numSpan=document.createElement("span");numSpan.className="ger-num";numSpan.textContent="Paciente "+idx;
+  head.appendChild(numSpan);head.appendChild(rmBtn);
+  var row1=document.createElement("div");row1.className="r2";
+  row1.innerHTML="<div class='ff'><label>UTI</label><input type='text' class='g-uti' placeholder='UTI 2' value='"+(data.uti||"")+"'></div><div class='ff'><label>Leito</label><input type='text' class='g-leito' placeholder='05' value='"+(data.leito||"")+"'></div>";
+  var row2=document.createElement("div");row2.className="r2";
+  row2.innerHTML="<div class='ff'><label>Iniciais</label><input type='text' class='g-ini' placeholder='JSS' value='"+(data.ini||"")+"'></div><div class='ff'><label>Motivo</label><input type='text' class='g-motivo' placeholder='Risco juridico' value='"+(data.motivo||"")+"'></div>";
+  d.appendChild(head);d.appendChild(row1);d.appendChild(row2);
   l.appendChild(d);
 }
 function renum(){[].slice.call(document.querySelectorAll(".ger-num")).forEach(function(el,i){el.textContent="Paciente "+(i+1);});}
@@ -384,7 +406,13 @@ function getGer(){return[].slice.call(document.querySelectorAll(".ger-item")).ma
 function loadGer(){try{var s=localStorage.getItem("dpg_ger");if(s){var a=JSON.parse(s);if(a.length){a.forEach(function(g){addGerido(g);});return;}}}catch(e){}addGerido();}
 function saveGer(){try{localStorage.setItem("dpg_ger",JSON.stringify(getGer()));}catch(e){}}
 function setME(v){meAtivo=v==="sim";document.getElementById("me-nao").classList.toggle("on",v==="nao");document.getElementById("me-sim").classList.toggle("on",v==="sim");document.getElementById("me-det").style.display=meAtivo?"block":"none";if(meAtivo&&!document.getElementById("meList").children.length)addME();}
-function addME(){var l=document.getElementById("meList");var d=document.createElement("div");d.className="dyn-item";d.innerHTML="<input type='text' placeholder='UTI / leito / fase'><button class='btn-rm' onclick='this.parentElement.remove()'>X</button>";l.appendChild(d);}
+function addME(){
+  var l=document.getElementById("meList");
+  var d=document.createElement("div");d.className="dyn-item";
+  var inp=document.createElement("input");inp.type="text";inp.placeholder="UTI / leito / fase";
+  var btn=document.createElement("button");btn.className="btn-rm";btn.textContent="X";btn.addEventListener("click",function(){d.remove();});
+  d.appendChild(inp);d.appendChild(btn);l.appendChild(d);
+}
 function buildEq(){var c=document.getElementById("eqBlocks");EQ.forEach(function(e){var d=document.createElement("div");d.className="card";d.innerHTML="<div class='card-ttl'>"+e.icon+" "+e.name+"</div><textarea id='"+e.id+"_sig' placeholder='Sinalizacoes, avisos'></textarea>";c.appendChild(d);});}
 function buildReview(){
   var lines=[];var vm=0;UTIS.forEach(function(u){vm+=(parseInt(gv(u.id+"_vm"))||0);});
