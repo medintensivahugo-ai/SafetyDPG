@@ -375,11 +375,33 @@ function showShare() { buildShare(); switchView("share-view"); }
 // ── CLOUD ──
 function loadCloud(cb) {
   const mc = document.getElementById("monthlyContent");
-  if(mc) mc.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:30px;">Carregando...</div>`;
-  fetch(SURL)
+  if(mc) mc.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:30px;">Carregando dados da nuvem...</div>`;
+  fetch(SURL+"?t="+Date.now())
     .then(r => r.json())
     .then(d => { if(d.status==="ok") cRecs = d.records||[]; if(cb) cb(); })
-    .catch(() => { cRecs = getLoc(); if(cb) cb(); });
+    .catch(() => { cRecs = []; if(cb) cb(); });
+}
+function testSync() {
+  const r = document.getElementById("testSyncResult");
+  r.innerHTML = `<span class="sync-badge sync-load">Testando...</span>`;
+  fetch(SURL+"?t="+Date.now())
+    .then(res => res.json())
+    .then(d => {
+      r.innerHTML = d.status==="ok"
+        ? `<span class="sync-badge sync-ok">✓ Conectado (${d.records ? d.records.length : 0} registros)</span>`
+        : `<span class="sync-badge sync-err">✕ Erro na conexão</span>`;
+    }).catch(() => {
+      r.innerHTML = `<span class="sync-badge sync-err">✕ Sem conexão com Google</span>`;
+    });
+}
+
+function loadCloud(cb) {
+  const mc = document.getElementById("monthlyContent");
+  if(mc) mc.innerHTML = `<div style="color:var(--tx3);text-align:center;padding:30px;">Carregando dados da nuvem...</div>`;
+  fetch(SURL+"?t="+Date.now())
+    .then(r => r.json())
+    .then(d => { if(d.status==="ok") cRecs = d.records||[]; if(cb) cb(); })
+    .catch(() => { cRecs = []; if(cb) cb(); });
 }
 function testSync() {
   const r = document.getElementById("testSyncResult");
@@ -627,7 +649,11 @@ function getLoc() { try{return JSON.parse(localStorage.getItem("dpg_rec")||"[]")
 // ── FINALIZE ──
 function finalize() {
   saveGer();
-  const rec=mkRec(); saveLoc(rec); renderRpt(rec); switchView("report-view");
+  const rec=mkRec();
+  saveLoc(rec);
+  // Keep current rec as first in cRecs so share/WA use today's data
+  cRecs = [rec, ...cRecs.filter(r => new Date(r.ts).toDateString() !== new Date(rec.ts).toDateString())];
+  renderRpt(rec); switchView("report-view");
   const se=document.getElementById("syncStatus");
   se.innerHTML=`<span class="sync-badge sync-load">Salvando na nuvem…</span>`;
   fetch(SURL,{method:"POST",mode:"no-cors",body:JSON.stringify(rec)})
@@ -920,7 +946,7 @@ function copyWA() {
 // ── HISTORY ──
 function renderHist() {
   const list=document.getElementById("histList");
-  const recs=cRecs.length?cRecs:getLoc();
+  const recs=cRecs;
   if(!recs.length){list.innerHTML=`<div style="color:var(--tx3);text-align:center;padding:40px;">Nenhum registro ainda.</div>`;return;}
   list.innerHTML="";
   recs.forEach((r,i)=>{
@@ -937,7 +963,7 @@ function renderHist() {
   });
 }
 function loadRec(i) {
-  const recs=cRecs.length?cRecs:getLoc(); const r=recs[i];
+  const recs=cRecs; const r=recs[i];
   if(!r) return;
   if(!r.ud){showToast("Visualização completa apenas para registros recentes");return;}
   renderRpt(r); switchView("report-view");
@@ -945,7 +971,7 @@ function loadRec(i) {
 
 // ── MONTHLY ──
 function fillMonthSel() {
-  const recs=cRecs.length?cRecs:getLoc(); const sel=document.getElementById("monthSel");
+  const recs=cRecs; const sel=document.getElementById("monthSel");
   const months={};
   recs.forEach(r=>{if(r.ts){const d=new Date(r.ts);months[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`]=true;}});
   const keys=Object.keys(months).sort().reverse();
@@ -957,7 +983,7 @@ function renderMonthly() {
   const cont=document.getElementById("monthlyContent");
   if(!sel||sel==="Sem dados ainda"){cont.innerHTML=`<div style="color:var(--tx3);text-align:center;padding:40px;">Sem dados ainda.</div>`;return;}
   const [y,mo]=[parseInt(sel.split("-")[0]),parseInt(sel.split("-")[1])];
-  const recs=(cRecs.length?cRecs:getLoc()).filter(r=>r.ts&&new Date(r.ts).getFullYear()===y&&new Date(r.ts).getMonth()+1===mo);
+  const recs=cRecs.filter(r=>r.ts&&new Date(r.ts).getFullYear()===y&&new Date(r.ts).getMonth()+1===mo);
   if(!recs.length){cont.innerHTML=`<div style="color:var(--tx3);text-align:center;padding:40px;">Sem dados para este mês.</div>`;return;}
   let tn=0,tr=0,tps=0,tsrpa=0,txSum=0,meDias=0;
   const retDia=[],txDia=[],novasDia=[],evCnt={};
