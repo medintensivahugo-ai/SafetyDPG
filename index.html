@@ -336,7 +336,8 @@ const EQ = [
   {id:"fisio",name:"Fisioterapia",          icon:"🪴"},
   {id:"psico",name:"Psicologia",            icon:"🧠"},
   {id:"social",name:"Serviço Social",  icon:"🤝"},
-  {id:"odonto",name:"Odontologia",          icon:"🦷"}
+  {id:"odonto",name:"Odontologia",          icon:"🦷"},
+  {id:"fono", name:"Fonoaudiologia",        icon:"🗣️"}
 ];
 let cur=1, meAtivo=false, cRecs=[];
 
@@ -593,6 +594,11 @@ function buildEq() {
     const ta = document.createElement("textarea"); ta.id=e.id+"_sig"; ta.placeholder="Sinalizações, avisos…";
     d.appendChild(ttl); d.appendChild(ta); c.appendChild(d);
   });
+  const trs = document.createElement("div"); trs.className="card";
+  const trsT = document.createElement("div"); trsT.className="card-ttl"; trsT.textContent="🩸 TRS — Terapia Renal Substitutiva";
+  const trsL = document.createElement("label"); trsL.textContent="Quantidade de pacientes em TRS";
+  const trsI = document.createElement("input"); trsI.type="number"; trsI.id="trs_qty"; trsI.min="0"; trsI.placeholder="0";
+  trs.appendChild(trsT); trs.appendChild(trsL); trs.appendChild(trsI); c.appendChild(trs);
 }
 
 // ── REVIEW ──
@@ -631,7 +637,7 @@ function mkRec() {
     leitos:l,tVM:vm,taxa:((vm/l)*100).toFixed(1),ud,
     ev:getChips(), evD:[...document.querySelectorAll("#evList input")].map(e=>e.value).filter(Boolean),
     ger:getGer(), me:{on:meAtivo,items:[...document.querySelectorAll("#meList input")].map(e=>e.value).filter(Boolean)},
-    eq, infra};
+    eq, infra, trs:parseInt(gv("trs_qty"))||0};
 }
 
 // ── STORAGE ──
@@ -739,9 +745,9 @@ function renderRpt(rec) {
       if(i===4) el.style.color="var(--red)";
       grid.appendChild(el);
     });
-    let sn=0,sr=0;
+    let sn=0,sr=0,s24=0,sob=0;
     UTIS.forEach(u=>{
-      const d=rec.ud[u.id]; sn+=d.ad; sr+=d.ar;
+      const d=rec.ud[u.id]; sn+=d.ad; sr+=d.ar; s24+=d.a24; sob+=d.ob;
       const cells=[u.name,d.ad,d.ar,d.a24,d.ob];
       cells.forEach((v,i)=>{
         const el=mkDiv("altas-grid-cell"); el.textContent=v;
@@ -754,11 +760,12 @@ function renderRpt(rec) {
     });
     s.appendChild(grid);
     const tot=mkDiv("altas-total-row");
-    ["Total",sn,sr,"",""].forEach((v,i)=>{
+    ["Total",sn,sr,s24,sob].forEach((v,i)=>{
       const el=mkDiv(""); el.style.cssText="font-family:'DM Mono',monospace;text-align:center;padding:6px 2px;";
       if(i===0){el.style.cssText="font-weight:600;color:var(--tx2);font-size:12px;padding:6px 0;";}
       if(i===1){el.style.color="var(--grn)";el.style.fontWeight="700";el.style.fontSize="18px";}
       if(i===2){el.style.color="var(--org)";el.style.fontWeight="700";el.style.fontSize="18px";}
+      if(i===4&&sob>0){el.style.color="var(--red)";el.style.fontWeight="700";el.style.fontSize="18px";}
       el.textContent=v; tot.appendChild(el);
     });
     s.appendChild(tot);
@@ -817,6 +824,11 @@ function renderRpt(rec) {
       const nm=mkDiv(""); nm.style.cssText="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:2px;"; nm.textContent=e.icon+" "+e.name; s.appendChild(nm);
       const tx=mkDiv(""); tx.style.cssText="font-size:13px;margin-bottom:8px;"; tx.textContent=t; s.appendChild(tx);
     });
+    if(rec.trs>0){
+      any=true;
+      const nm=mkDiv(""); nm.style.cssText="font-size:11px;font-weight:600;color:var(--tx3);margin-bottom:2px;"; nm.textContent="🩸 TRS — Terapia Renal Substitutiva"; s.appendChild(nm);
+      const tx=mkDiv(""); tx.style.cssText="font-size:13px;margin-bottom:8px;"; tx.textContent=rec.trs+" paciente(s) em TRS"; s.appendChild(tx);
+    }
     if(!any){const d=mkDiv(""); d.style.cssText="font-size:13px;color:var(--tx3);"; d.textContent="Sem sinalizações."; s.appendChild(d);}
   });
 }
@@ -869,10 +881,10 @@ function buildShare() {
   const attl=mkDiv("sh-cell-ttl"); attl.textContent="🚪 Altas"; ac.appendChild(attl);
   const atbl=document.createElement("table"); atbl.className="mtbl";
   const ath=atbl.insertRow(); [["UTI"],["Hoje","center","#34c364"],["Ret.","center","#e09820"],["24h","center"],["Ob.","center","#f05a52"]].forEach(([t,a,c])=>{const th=document.createElement("th");th.textContent=t;if(a)th.style.textAlign=a;if(c)th.style.color=c;ath.appendChild(th);});
-  let tsn=0,tsr=0;
-  UTIS.forEach(u=>{const d=rec.ud[u.id];tsn+=d.ad;tsr+=d.ar;const row=atbl.insertRow();[[u.name,u.color,""],[d.ad,"#34c364","bold"],[d.ar,"#e09820","bold"],[d.a24,"",""],[d.ob,d.ob?"#f05a52":"",""]].forEach(([v,c,fw],i)=>{const td=row.insertCell();td.textContent=v;if(c)td.style.color=c;if(fw)td.style.fontWeight=fw;if(i>0)td.style.textAlign="center";});});
+  let tsn=0,tsr=0,ts24=0,tsob=0;
+  UTIS.forEach(u=>{const d=rec.ud[u.id];tsn+=d.ad;tsr+=d.ar;ts24+=d.a24;tsob+=d.ob;const row=atbl.insertRow();[[u.name,u.color,""],[d.ad,"#34c364","bold"],[d.ar,"#e09820","bold"],[d.a24,"",""],[d.ob,d.ob?"#f05a52":"",""]].forEach(([v,c,fw],i)=>{const td=row.insertCell();td.textContent=v;if(c)td.style.color=c;if(fw)td.style.fontWeight=fw;if(i>0)td.style.textAlign="center";});});
   const totrow=atbl.insertRow(); totrow.style.borderTop="1px solid var(--bord)";
-  [["Total","",""],tsn,tsr,"",""].forEach((v,i)=>{const td=totrow.insertCell();td.textContent=Array.isArray(v)?v[0]:v;if(i===1){td.style.color="#34c364";td.style.fontWeight="700";td.style.textAlign="center";}if(i===2){td.style.color="#e09820";td.style.fontWeight="700";td.style.textAlign="center";}});
+  [["Total","",""],tsn,tsr,ts24,tsob].forEach((v,i)=>{const td=totrow.insertCell();td.textContent=Array.isArray(v)?v[0]:v;if(i===1){td.style.color="#34c364";td.style.fontWeight="700";td.style.textAlign="center";}if(i===2){td.style.color="#e09820";td.style.fontWeight="700";td.style.textAlign="center";}if(i===4&&tsob>0){td.style.color="#f05a52";td.style.fontWeight="700";td.style.textAlign="center";}});
   ac.appendChild(atbl); grid.appendChild(ac);
 
   // Events
@@ -933,7 +945,9 @@ function copyWA() {
   UTIS.forEach(u=>{const d=rec.ud[u.id];t+=`• ${u.name}: ${d.int} int | ${d.vm} VM | ${d.lat} leitos\n`;});
   t+=`\n🚪 *ALTAS*\n`;
   UTIS.forEach(u=>{const d=rec.ud[u.id];t+=`• ${u.name}: 🟢${d.ad} hoje | 🟠${d.ar} retidas | ${d.a24} prov.24h | ${d.ob} óbito esp.\n`;});
-  t+=`▸ *Total novas: ${n} | Retidas: ${r}*\n`;
+  const tot24=UTIS.reduce((s,u)=>s+(rec.ud[u.id].a24||0),0);
+  const totOb=UTIS.reduce((s,u)=>s+(rec.ud[u.id].ob||0),0);
+  t+=`▸ *Total novas: ${n} | Retidas: ${r} | Prováveis 24h: ${tot24} | Óbitos esp.: ${totOb}*\n`;
   if(rec.ev.length||rec.evD.length){t+=`\n⚠️ *EVENTOS*\n`;if(rec.ev.length)t+=rec.ev.join(", ")+"\n";rec.evD.forEach(e=>{t+=`• ${e}\n`;});}
   let hc=false;
   UTIS.forEach(u=>{const it=rec.ud[u.id].cr;if(it.length){if(!hc){t+=`\n🔴 *WATCHERS*\n`;hc=true;}it.forEach(i=>{t+=`• ${u.name} — ${i}\n`;});}});
@@ -941,6 +955,7 @@ function copyWA() {
   t+=`\n🧠 *ME*: ${rec.me.on?"Protocolo em andamento":"Sem protocolo"}\n`;
   if(rec.me.on) rec.me.items.forEach(i=>{t+=`  • ${i}\n`;});
   let hs=false; EQ.forEach(e=>{const tx=(rec.eq[e.id]||"").trim();if(tx){if(!hs){t+=`\n📢 *SINALIZAÇÕES*\n`;hs=true;}t+=`• ${e.name}: ${tx}\n`;}});
+  if(rec.trs>0){if(!hs){t+=`\n📢 *SINALIZAÇÕES*\n`;hs=true;}t+=`• TRS: ${rec.trs} paciente(s)\n`;}
   navigator.clipboard.writeText(t).then(()=>showToast("✓ Copiado!")).catch(()=>prompt("Copie:",t));
 }
 
