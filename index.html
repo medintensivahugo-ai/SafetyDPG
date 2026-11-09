@@ -199,8 +199,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div id="censoBlocks"></div>
     <div class="card" style="border-color:rgba(79,158,255,.25)">
       <div class="card-ttl" style="color:var(--acc)">Total de leitos dispon&#237;veis hoje</div>
-      <input type="number" id="leitos_tot" min="1" value="54" style="font-size:22px;text-align:center;">
-      <div class="hint">Padr&#227;o: 54. Corrija se necess&#225;rio.</div>
+      <input type="number" id="leitos_tot" min="1" value="70" style="font-size:22px;text-align:center;">
+      <div class="hint">Padr&#227;o: 70 (some os leitos extras, se houver). Corrija se necess&#225;rio.</div>
       <div class="taxa-box"><div class="taxa-num" id="taxaNum">--</div><div class="taxa-lbl">Taxa de Ventila&#231;&#227;o Mec&#226;nica</div><div class="taxa-sub" id="taxaSub">Preencha os dados acima</div></div>
     </div>
     <div class="nav-row"><button class="btn btn-sec" onclick="goSec(1)" style="flex:none">&#8592; Ant.</button><button class="btn btn-pri" onclick="goSec(3)" style="flex:1">Pr&#243;ximo &#8594;</button></div>
@@ -326,11 +326,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <script>
 const SURL = "https://script.google.com/macros/s/AKfycbzxUjJJ5gvKg68fE_PbFySfmAyy-fO3pqqjk0xZrgN-Upgi9m0lMJApUetJBT5eqeJq/exec";
 const UTIS = [
-  {id:"u1",name:"UTI 1",color:"#4f9eff",lD:10,info:"ISO1-3-10-ISO2"},
+  {id:"u1",name:"UTI 1",color:"#4f9eff",lD:10,info:"10 leitos + extra"},
   {id:"u2",name:"UTI 2",color:"#34c364",lD:20,info:"20 leitos"},
-  {id:"u3",name:"UTI 3",color:"#b07aff",lD:14,info:"14 leitos"},
-  {id:"u4",name:"UTI 4",color:"#e09820",lD:10,info:"10 leitos"}
+  {id:"u3",name:"UTI 3",color:"#b07aff",lD:10,info:"10 leitos + extra"},
+  {id:"u4",name:"UTI 4",color:"#e09820",lD:20,info:"20 leitos"},
+  {id:"u5",name:"UTI 5",color:"#2ecfbc",lD:10,info:"10 leitos + extra"}
 ];
+function fmtUti(v){const m=String(v||"").match(/\d+/);return m?"UTI "+m[0]:String(v||"").trim();}
+function fmtGer(g){return [fmtUti(g.uti),g.leito?"leito "+String(g.leito).trim():"",String(g.ini||"").trim().toUpperCase()].filter(Boolean).join(" - ");}
 const EQ = [
   {id:"eng", name:"Engenharia Clínica", icon:"🔧"},
   {id:"fisio",name:"Fisioterapia",          icon:"🪴"},
@@ -466,7 +469,7 @@ function buildCenso() {
 function calcAll() {
   let vm = 0;
   UTIS.forEach(u => vm += (parseInt(gv(`${u.id}_vm`))||0));
-  const l = parseInt(gv("leitos_tot"))||54;
+  const l = parseInt(gv("leitos_tot"))||70;
   const t = l>0 ? ((vm/l)*100).toFixed(1) : null;
   if(t) {
     const c = parseFloat(t)>70?"var(--red)":parseFloat(t)>50?"var(--org)":"var(--acc)";
@@ -605,7 +608,7 @@ function buildEq() {
 function buildReview() {
   const lines = [];
   let vm=0; UTIS.forEach(u=>vm+=(parseInt(gv(`${u.id}_vm`))||0));
-  const lt = gv("leitos_tot")||54;
+  const lt = gv("leitos_tot")||70;
   lines.push(`Taxa VM: ${((vm/(parseInt(lt)||1))*100).toFixed(1)}% (${vm}÷${lt})`);
   let n=0,r=0; UTIS.forEach(u=>{n+=(parseInt(gv(`${u.id}_ad`))||0);r+=(parseInt(gv(`${u.id}_ar`))||0);});
   lines.push(`Altas novas: ${n} · Retidas: ${r}`);
@@ -626,7 +629,7 @@ function mkRec() {
       a24:parseInt(gv(`${u.id}_a24`))||0,ob:parseInt(gv(`${u.id}_ob`))||0,
       cr:[...document.querySelectorAll(`#${u.id}_cl input`)].map(e=>e.value).filter(Boolean)};
   });
-  const l=parseInt(gv("leitos_tot"))||54;
+  const l=parseInt(gv("leitos_tot"))||70;
   const eq={}; EQ.forEach(e=>eq[e.id]=(gv(`${e.id}_sig`)||"").trim());
   const infra=(gv("infra_obs")||"").trim();
   return {ts:now.toISOString(),
@@ -798,7 +801,7 @@ function renderRpt(rec) {
     if(rec.ger.length) rec.ger.forEach(g=>{
       const d=mkDiv(""); d.style.cssText="padding:8px 0;border-bottom:1px solid var(--bord);";
       const top=mkDiv(""); top.style.cssText="display:flex;gap:8px;align-items:baseline;";
-      const loc=mkDiv(""); loc.style.cssText="font-family:'DM Mono',monospace;font-size:13px;color:var(--acc2);"; loc.textContent=`${g.uti} / leito ${g.leito} / ${g.ini}`;
+      const loc=mkDiv(""); loc.style.cssText="font-family:'DM Mono',monospace;font-size:13px;color:var(--acc2);"; loc.textContent=fmtGer(g);
       top.appendChild(loc); d.appendChild(top);
       const mot=mkDiv(""); mot.style.cssText="font-size:13px;color:var(--tx2);"; mot.textContent=g.motivo;
       d.appendChild(mot); s.appendChild(d);
@@ -905,7 +908,7 @@ function buildShare() {
     const gw=mkDiv(""); gw.style.cssText="display:flex;flex-wrap:wrap;gap:8px;";
     gL.forEach(g=>{
       const sp=mkDiv(""); sp.style.cssText="font-size:11px;display:inline-flex;gap:4px;align-items:baseline;";
-      const loc=mkDiv(""); loc.style.cssText="color:#4f9eff;font-family:'DM Mono',monospace;"; loc.textContent=`${g.uti} / leito ${g.leito} / ${g.ini}`;
+      const loc=mkDiv(""); loc.style.cssText="color:#4f9eff;font-family:'DM Mono',monospace;"; loc.textContent=fmtGer(g);
       const mot=mkDiv(""); mot.style.color="var(--tx2)"; mot.textContent=g.motivo;
       sp.appendChild(loc); sp.appendChild(mot); gw.appendChild(sp);
     });
@@ -951,7 +954,7 @@ function copyWA() {
   if(rec.ev.length||rec.evD.length){t+=`\n⚠️ *EVENTOS*\n`;if(rec.ev.length)t+=rec.ev.join(", ")+"\n";rec.evD.forEach(e=>{t+=`• ${e}\n`;});}
   let hc=false;
   UTIS.forEach(u=>{const it=rec.ud[u.id].cr;if(it.length){if(!hc){t+=`\n🔴 *WATCHERS*\n`;hc=true;}it.forEach(i=>{t+=`• ${u.name} — ${i}\n`;});}});
-  if(rec.ger.length){t+=`\n🛡️ *GERENCIADOS*\n`;rec.ger.forEach(g=>{t+=`• ${g.uti} / leito ${g.leito} / ${g.ini} — ${g.motivo}\n`;});}
+  if(rec.ger.length){t+=`\n🛡️ *GERENCIADOS*\n`;rec.ger.forEach(g=>{t+=`• ${fmtGer(g)}${g.motivo?" - "+g.motivo:""}\n`;});}
   t+=`\n🧠 *ME*: ${rec.me.on?"Protocolo em andamento":"Sem protocolo"}\n`;
   if(rec.me.on) rec.me.items.forEach(i=>{t+=`  • ${i}\n`;});
   let hs=false; EQ.forEach(e=>{const tx=(rec.eq[e.id]||"").trim();if(tx){if(!hs){t+=`\n📢 *SINALIZAÇÕES*\n`;hs=true;}t+=`• ${e.name}: ${tx}\n`;}});
